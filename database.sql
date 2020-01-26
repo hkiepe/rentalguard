@@ -28,14 +28,20 @@ CREATE TABLE IF NOT EXISTS `rentals` (
   `re_handle` varchar(255) COLLATE utf8_unicode_ci NOT NULL, -- ID des Fahrzeuges
   `rp_id` int(10) unsigned NOT NULL, -- ID des Verleihpunktes auf dem ausgeliegen wurde
   `cl_id` int(10) unsigned NOT NULL, -- ID des Kunden, der das Fahrzeug ausgeliehen hat.
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
   PRIMARY KEY (`re_id`), UNIQUE (`re_handle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+-- Tabelle der temporären Verleihvorgänge
 CREATE TABLE IF NOT EXISTS `tmp_rentals` (
   `tmp_id` int(10) unsigned NOT NULL AUTO_INCREMENT, -- eindeutige ID der einträge des temporären Verleihvorgangs
   `tmp_re_handle` varchar(255) COLLATE utf8_unicode_ci NOT NULL, -- ID des Fahrzeuges
   `tmp_rp_id` int(10) unsigned NOT NULL, -- ID des Verleihpunktes auf dem ausgeliehen wurde
   `tmp_cl_id` int(10) unsigned NOT NULL, -- ID des Kunden, der das Fahrzeug ausgeliehen hat.
+  `tmp_start_rental` int(10) unsigned NOT NULL, -- ID des Kunden, der das Fahrzeug ausgeliehen hat.
+  `tmp_declared_end_rental` int(10) unsigned NOT NULL, -- ID des Kunden, der das Fahrzeug ausgeliehen hat.
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`tmp_id`), UNIQUE (`tmp_re_handle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -43,6 +49,8 @@ CREATE TABLE IF NOT EXISTS `tmp_rentals` (
 CREATE TABLE IF NOT EXISTS `rentalpoints` (
   `rp_id` int(10) unsigned NOT NULL AUTO_INCREMENT, -- eindeutige ID des Verleihpunktes
   `rp_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL, -- Name des Verleihpunktes
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
   PRIMARY KEY (`rp_id`), UNIQUE (`rp_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -51,6 +59,8 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `vh_id` int(10) unsigned NOT NULL AUTO_INCREMENT, -- eindeutige ID des Fahrzeuges als Fremdschlüssel
   `vh_handle` varchar(255) COLLATE utf8_unicode_ci NOT NULL, -- eindeutige Kurzbezeichnung des Fahrzeuges
   `vh_rp_id` int(10) unsigned NOT NULL, -- eindeutige Zuweisung des Verleihpunktes an dem sich das Fahrzeug gerade befindet
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
   PRIMARY KEY (`vh_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
