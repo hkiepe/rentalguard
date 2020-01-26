@@ -53,7 +53,7 @@ if(isset($_GET['register'])) {
 		$_SESSION['clientID'] = $pdo->lastInsertId();
 
 		if($result) {		
-			echo '<br>Klient został utworzony pomyślnie. <a href="newclient.php">Utwórz nowego klienta</a><br>';
+			echo '<br>Klient został utworzony pomyślnie.';
 			$registerForm = false;
 			$rentForm = true;
 			// echo "<br><br><p>" . $registerForm . ", " . $rentForm . ", " . $email . ", " . $pesel . ", " . $phone . ", " . $fname . ", " . $sname . ", " . $_SESSION['clientID'] . "</p>";
@@ -71,13 +71,51 @@ $user = check_user();
 if(isset($_GET['rental'])) {
 	$error = false;
 	$vehicle = $_POST['vehicle'];
+	$days = trim($_POST['days']);
+	$hours = trim($_POST['hours']);
+	$minutes = trim($_POST['minutes']);
 	
+	/* Check if in dropdown is a value */
 	if(empty($vehicle)) {
 		echo '<br>Proszę podać identyfikator pojazdu.<br>';
 		$registerForm = false; //Variable if client registration formular should be shown.
 		$rentForm = true;
 		$error = true;
 	}
+
+	/* Check if rental times have values */
+	if(empty($days) || empty($hours) || empty($minutes)) {
+		echo '<br>Proszę podać czas wynajmu.<br>';
+		$registerForm = false; //Variable if client registration formular should be shown.
+		$rentForm = true; 
+		$error = true;
+	}
+
+	/* Check if rental times are integers */
+	if ( filter_var($days, FILTER_VALIDATE_INT) == FALSE || filter_var($hours, FILTER_VALIDATE_INT) == FALSE || filter_var($minutes, FILTER_VALIDATE_INT) == FALSE ) {
+		echo "<br>Podaj czas jako liczbę całkowitą.";
+		$registerForm = false;
+		$rentForm = true; 
+		$error = true;
+    }
+
+	/* Enter rental Time into tmp_rentals for the selected vehicles */
+	// if(!$error) {
+	// 	$statement = $pdo->prepare( "INSERT INTO tmp_rentals ( tmp_re_handle, tmp_rp_id, tmp_cl_id ) VALUES ( :vehicle, :rentalpoint, :clientID )");
+	// 	$result = $statement->execute(array( 'vehicle' => $vehicle, 'rentalpoint' => $_SESSION['rentalpoint'], 'clientID' => $_SESSION['clientID'] ));
+		
+	// 	if($result) {		
+	// 		echo '<br>Pojazd został dodany.';
+	// 		$registerForm = false;
+	// 		$rentForm = true;
+	// 	} else {
+	// 		echo '<br>Niestety wystąpił błąd podczas zapisywania - Pojazd jest już wypożyczony 
+	// 		lub nie istnieje w bazie danych.';
+	// 		$registerForm = false;
+	// 		$rentForm = true;
+	// 	}
+	// }
+
 	
 	/* Überprüfen in Datenbank, ob das Fahrzeug wirklich existiert. Wenn das vehicle gefunden wird, wird "num" um eins hoch gesetzt.
 	Wenn Das Fahrzeug nicht existiert, wird "$error = true" gesetzt. */
@@ -105,12 +143,13 @@ if(isset($_GET['rental'])) {
 
 	}
 
+	/* Fahrzeug zu tmp_rentals hinzufügen */
 	if(!$error) {
 		$statement = $pdo->prepare( "INSERT INTO tmp_rentals ( tmp_re_handle, tmp_rp_id, tmp_cl_id ) VALUES ( :vehicle, :rentalpoint, :clientID )");
 		$result = $statement->execute(array( 'vehicle' => $vehicle, 'rentalpoint' => $_SESSION['rentalpoint'], 'clientID' => $_SESSION['clientID'] ));
 		
 		if($result) {		
-			echo '<br>Klient został utworzony pomyślnie. <a href="newclient.php">Utwórz nowego klienta</a><br>';
+			echo '<br>Pojazd został dodany.';
 			$registerForm = false;
 			$rentForm = true;
 		} else {
@@ -198,45 +237,47 @@ if($registerForm) {
 
 if($rentForm == true) {	
 ?>
-<h1>Utwórz wynajem</h1>
-<b>
-	<?php
-		// Display Client name at the top of the form.
-		if ($_SESSION['clientID']) {
-			$statement = $pdo->prepare("SELECT fname, sname FROM clients WHERE id = :clientID");
-			$statement->execute(array( 'clientID' => $_SESSION['clientID'] ));
-			$client = $statement->fetch(PDO::FETCH_ASSOC);
-			echo "Klient: " . $client['fname'] . " " . $client['sname'];
-		} else {
-			print_r("Nie wybrano klienta.");
-		}
-	?>
-</b><br><br>
+<p>Wprowadź informacje o wynajmie dla wybranego klienta.</p>
 <form action="" method="post">
 	<div class="form-group">
-		<label for="vehicle">Numer pojazdu:</label>
-		<input type="search" name="vehicle" list="vehicle">
-			<datalist id="vehicle">
-				<?php
-				//Get the values for the dropdown with rentalpoints
-					try {
-						$statement = $pdo->prepare("SELECT vehicles.vh_handle, vehicles.vh_id, vehicles.vh_rp_id FROM vehicles WHERE (vehicles.vh_handle NOT IN (SELECT rentals.re_handle FROM rentals)) AND (vehicles.vh_handle NOT IN (SELECT tmp_rentals.tmp_re_handle FROM tmp_rentals)) AND vehicles.vh_rp_id = :rentalpoint");
-						$statement->execute(array('rentalpoint' => $_SESSION['rentalpoint']));
-						$vehicles = $statement->fetchAll();
-					} catch(Exception $ex) {
-						echo($ex -> getMessage());
-					}
-					foreach($vehicles as $row) {
-						echo '<option value="'.$row['vh_handle'].'">'.$row['vh_handle'].'</option>';
-					}
-				?>
-			</datalist>	
-		</input>
+		<fieldset>
+		<legend>
+			<?php
+				// Display Client name at the top of the form.
+				if ($_SESSION['clientID']) {
+					$statement = $pdo->prepare("SELECT fname, sname FROM clients WHERE id = :clientID");
+					$statement->execute(array( 'clientID' => $_SESSION['clientID'] ));
+					$client = $statement->fetch(PDO::FETCH_ASSOC);
+					echo "Wybrany klient: " . $client['fname'] . " " . $client['sname'];
+				} else {
+					print_r("Nie wybrano klienta.");
+				}
+			?>
+		</legend>
+			<label for="vehicle">Numer pojazdu:</label>
+			<input type="search" name="vehicle" list="vehicle" id="hour" size="40" maxlength="250" class="form-control" required>
+				<datalist id="vehicle">
+					<?php
+					//Get the values for the dropdown with rentalpoints
+						try {
+							$statement = $pdo->prepare("SELECT vehicles.vh_handle, vehicles.vh_id, vehicles.vh_rp_id FROM vehicles WHERE (vehicles.vh_handle NOT IN (SELECT rentals.re_handle FROM rentals)) AND (vehicles.vh_handle NOT IN (SELECT tmp_rentals.tmp_re_handle FROM tmp_rentals)) AND vehicles.vh_rp_id = :rentalpoint");
+							$statement->execute(array('rentalpoint' => $_SESSION['rentalpoint']));
+							$vehicles = $statement->fetchAll();
+						} catch(Exception $ex) {
+							echo($ex -> getMessage());
+						}
+						foreach($vehicles as $row) {
+							echo '<option value="'.$row['vh_handle'].'">'.$row['vh_handle'].'</option>';
+						}
+					?>
+				</datalist>
+			</input>
+			<label for="days">Dni:</label><input type="text" id="days" size="40" maxlength="250" name="days" class="form-control" required></input>
+			<label for="hours">Godzin:</label><input type="text" id="hours" size="40" maxlength="250" name="hours" class="form-control" required></input>
+			<label for="minutes">Minut:</label><input type="text" id="minutes" size="40" maxlength="250" name="minutes" class="form-control" required></input>
+		</fieldset>
 	</div>
-
-	<!-- Show all vehicles for the selected client -->
 <div class="panel panel-default">
- 
  <table class="table" id="tmp_rentals">
 	 <tr>
 		 <th>#</th>
@@ -258,7 +299,6 @@ if($rentForm == true) {
 	 ?>
  </table>
 </div>
-
 	<button formaction="?rental=1" type="submit" class="btn btn-lg btn-primary btn-block">Dodaj pojazd</button>
 	<button formaction="?create_rental=1" type="submit" class="create_rental btn btn-lg btn-primary btn-block">Stworzyć wynajem</button>
 
