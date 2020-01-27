@@ -1,0 +1,26 @@
+<td colspan="3" valign="top" class='tabbed-content-container ui-corner-all'>
+<tr>
+    <td>
+        <button id= "Reply-open-button-1"    class="t-button t-state-default reply-button Reply-open-button-1" value =  "1">
+            Reply</button>
+        <button id= "Alert-open-button-1"    class="Alert-open-button-1" value = "1">
+            Alert</button>
+        <button id= "Close-open-button-1"    class="Close-open-button-1" value = "1">
+            Close</button>
+    </td>
+</tr>
+
+<div style="display: none" class="Reply-div-1 div-1">
+    <p>Reply</p>
+            <button id="Hide-1"    class=" Hide-1">hide</button>
+</div>
+
+<div style="display: none" class="Alert-div-1 div-1">
+   <p> Alert - TBC</p>
+            <button id="Hide-1"    class=" Hide-1">hide</button>
+</div>
+
+<div style="display: none" class="Close-div-1 div-1">
+   <p> Close - TBC</p>
+            <button id="Hide-1"    class=" Hide-1">hide</button>
+</div>

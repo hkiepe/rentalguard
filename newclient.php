@@ -1,9 +1,9 @@
 <?php 
-session_start();
-require_once("inc/config.inc.php");
-require_once("inc/functions.inc.php");
-$user = check_user();
-include("templates/header.inc.php")
+	session_start();
+	require_once("inc/config.inc.php");
+	require_once("inc/functions.inc.php");
+	$user = check_user();
+	include("templates/header.inc.php");
 ?>
 <div class="container main-container registration-form">
 <?php
@@ -268,7 +268,7 @@ if($rentForm == true) {
 			?>
 		</legend>
 			<label for="vehicle">Numer pojazdu:</label>
-			<input type="search" name="vehicle" list="vehicle" id="hour" size="40" maxlength="250" class="form-control">
+			<input type="search" name="vehicle" list="vehicle" id="vehicle" size="40" maxlength="250" class="form-control">
 				<datalist id="vehicle">
 					<?php
 					//Get the values for the dropdown with rentalpoints

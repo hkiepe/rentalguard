@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `vehicles` (
   `vh_rp_id` int(10) unsigned NOT NULL, -- eindeutige Zuweisung des Verleihpunktes an dem sich das Fahrzeug gerade befindet
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp on update CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-  PRIMARY KEY (`vh_id`)
+  PRIMARY KEY (`vh_id`), UNIQUE (`vh_handle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- Liste der Kunden
@@ -89,7 +89,7 @@ INSERT INTO rentalpoints ( rp_name ) VALUES
 INSERT INTO `vehicles` ( vh_handle, vh_rp_id ) VALUES
   ( 'RD-1', 1 ),
   ( 'RD-2', 2 ),
-  ( 'RM-3', 3 ),
+  ( 'RD-3', 3 ),
   ( 'RD-4', 1 ),
   ( 'RD-5', 2 ),
   ( 'RD-6', 3 ),

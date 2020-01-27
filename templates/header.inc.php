@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="pl">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <title>Veloking - Baza danych wynajmu</title>
+
+    <!-- CSS for Rentalform -->
+    <link href="css/hide-show-fields-form.css" rel="stylesheet">
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -15,7 +17,7 @@
     <link href="css/style.css" rel="stylesheet">
 
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <script type="text/javascript" src='js/jquery-3.4.1.min.js'></script>
+    <script type="text/javascript" src='js/jquery-3.4.1.js'></script>
   </head>
   <body>
 
@@ -79,7 +81,7 @@
             <ul class="nav navbar-nav navbar-right">
               <li><a href="internal.php">Przegląd</a></li>
               <li><a href="closerental.php">Zakończ wynajem</a></li>   
-              <li><a href="newclient.php">Nowe Klient</a></li>       
+              <li><a href="newrental.php">Wynajmij pojazd</a></li>   
               <li><a href="settings.php">Ustawienia</a></li>
               <li><a href="logout.php">Wyloguj</a></li>
             </ul>   

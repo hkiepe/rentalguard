@@ -15,7 +15,7 @@ include("templates/header.inc.php");
     // Check record exists
     $checkRecord = mysqli_query($con,"SELECT * FROM tmp_rentals WHERE tmp_id=".$id);
     $totalrows = mysqli_num_rows($checkRecord);
-
+        
     if($totalrows > 0){
         // Delete record
         $query = "DELETE FROM tmp_rentals WHERE tmp_id=".$id;
@@ -25,7 +25,7 @@ include("templates/header.inc.php");
         exit;
     }
     }
-
+    error_log('TEST1');
     echo 0;
     exit;
 ?>
