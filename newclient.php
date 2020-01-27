@@ -136,28 +136,26 @@ if(isset($_GET['rental'])) {
 		}
 	}
 }
+
 // Create unique ID for the rental and copy the whole tmp_rental into the rentals table and delete entries of tmp_rentals table.
 if(isset($_GET['create_rental'])) {
 	$error = false;
 	$registerForm = false;
 	$rentForm = true;
 
-	// Create Unique ID for the rental and check in rentals if ID exists. If yes try again.
-	$statement = $pdo->prepare("SELECT re_unique_id FROM rentals GROUP BY re_unique_id");
-	$statement->execute();
-	$re_unique_id = $statement->fetch(PDO::FETCH_ASSOC);
-	// Create Unique ID for the rental and check in rentals if ID exists. If yes try again.
+	// Create random unique ID for the rental and check in rentals if ID exists. If yes try again.
     $statement = $pdo->prepare("SELECT re_unique_id FROM rentals GROUP BY re_unique_id");
     $statement->execute();
-    $re_unique_id = $statement->fetchAll();
-    $i = 1;
-    while($i != 0) {
+	$re_unique_id = $statement->fetchAll();
+    do {
+		$i = 0;
         $randID = rand();
-        echo $randID . '<br>';
 	    foreach($re_unique_id as $row) {
-            ($row == $randID) ? ($i++) : ($i=0);
+			if ($row == $randID) {
+				$i++;
+			}
 	    }
-	}
+	} while ($i != 0);
 	$re_unique_id = $randID;
 
 	// Copy the whole tmp_rental into the rentals table and delete entries of tmp_rentals table.
