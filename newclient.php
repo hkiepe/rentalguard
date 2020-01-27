@@ -71,9 +71,6 @@ $user = check_user();
 if(isset($_GET['rental'])) {
 	$error = false;
 	$vehicle = $_POST['vehicle'];
-	$days = trim($_POST['days']);
-	$hours = trim($_POST['hours']);
-	$minutes = trim($_POST['minutes']);
 	
 	/* Check if in dropdown is a value */
 	if(empty($vehicle)) {
@@ -82,40 +79,6 @@ if(isset($_GET['rental'])) {
 		$rentForm = true;
 		$error = true;
 	}
-
-	/* Check if rental times have values */
-	if(empty($days) || empty($hours) || empty($minutes)) {
-		echo '<br>Proszę podać czas wynajmu.<br>';
-		$registerForm = false; //Variable if client registration formular should be shown.
-		$rentForm = true; 
-		$error = true;
-	}
-
-	/* Check if rental times are integers */
-	if ( filter_var($days, FILTER_VALIDATE_INT) == FALSE || filter_var($hours, FILTER_VALIDATE_INT) == FALSE || filter_var($minutes, FILTER_VALIDATE_INT) == FALSE ) {
-		echo "<br>Podaj czas jako liczbę całkowitą.";
-		$registerForm = false;
-		$rentForm = true; 
-		$error = true;
-    }
-
-	/* Enter rental Time into tmp_rentals for the selected vehicles */
-	// if(!$error) {
-	// 	$statement = $pdo->prepare( "INSERT INTO tmp_rentals ( tmp_re_handle, tmp_rp_id, tmp_cl_id ) VALUES ( :vehicle, :rentalpoint, :clientID )");
-	// 	$result = $statement->execute(array( 'vehicle' => $vehicle, 'rentalpoint' => $_SESSION['rentalpoint'], 'clientID' => $_SESSION['clientID'] ));
-		
-	// 	if($result) {		
-	// 		echo '<br>Pojazd został dodany.';
-	// 		$registerForm = false;
-	// 		$rentForm = true;
-	// 	} else {
-	// 		echo '<br>Niestety wystąpił błąd podczas zapisywania - Pojazd jest już wypożyczony 
-	// 		lub nie istnieje w bazie danych.';
-	// 		$registerForm = false;
-	// 		$rentForm = true;
-	// 	}
-	// }
-
 	
 	/* Überprüfen in Datenbank, ob das Fahrzeug wirklich existiert. Wenn das vehicle gefunden wird, wird "num" um eins hoch gesetzt.
 	Wenn Das Fahrzeug nicht existiert, wird "$error = true" gesetzt. */
@@ -143,7 +106,21 @@ if(isset($_GET['rental'])) {
 
 	}
 
-	/* Fahrzeug zu tmp_rentals hinzufügen */
+	// // Berechnen des Warenkorbs
+	// if (isset($_POST['yesno'])) {
+	// 	switch ($_POST['yesno']) {
+	// 		case 'day': $price = 50;
+	// 			break;
+	// 		case 'halfHour': $price = 8;
+	// 			break;
+	// 		case 'hours_select': (($_POST['hours'] * 15) > 50) ? ($price = 50) : ($_POST['hours'] * 15);
+	// 			break;
+	// 		case 'days_select': $price = $_POST['days'] * 50;
+	// 			break;
+	//    }
+	// }
+
+	// Fahrzeug zu tmp_rentals hinzufügen
 	if(!$error) {
 		$statement = $pdo->prepare( "INSERT INTO tmp_rentals ( tmp_re_handle, tmp_rp_id, tmp_cl_id ) VALUES ( :vehicle, :rentalpoint, :clientID )");
 		$result = $statement->execute(array( 'vehicle' => $vehicle, 'rentalpoint' => $_SESSION['rentalpoint'], 'clientID' => $_SESSION['clientID'] ));
@@ -153,21 +130,58 @@ if(isset($_GET['rental'])) {
 			$registerForm = false;
 			$rentForm = true;
 		} else {
-			echo '<br>Niestety wystąpił błąd podczas zapisywania - Pojazd jest już wypożyczony 
-			lub nie istnieje w bazie danych.';
+			echo '<br>Niestety wystąpił błąd podczas zapisywania - Pojazd jest już wypożyczony lub nie istnieje w bazie danych.';
 			$registerForm = false;
 			$rentForm = true;
 		}
 	}
 }
-// Copy the whole tmp_rental into the rentals table and delete entries of tmp_rentals table.
+// Create unique ID for the rental and copy the whole tmp_rental into the rentals table and delete entries of tmp_rentals table.
 if(isset($_GET['create_rental'])) {
 	$error = false;
 	$registerForm = false;
 	$rentForm = true;
+
+	// Create Unique ID for the rental and check in rentals if ID exists. If yes try again.
+	$statement = $pdo->prepare("SELECT re_unique_id FROM rentals GROUP BY re_unique_id");
+	$statement->execute();
+	$re_unique_id = $statement->fetch(PDO::FETCH_ASSOC);
+	// Create Unique ID for the rental and check in rentals if ID exists. If yes try again.
+    $statement = $pdo->prepare("SELECT re_unique_id FROM rentals GROUP BY re_unique_id");
+    $statement->execute();
+    $re_unique_id = $statement->fetchAll();
+    $i = 1;
+    while($i != 0) {
+        $randID = rand();
+        echo $randID . '<br>';
+	    foreach($re_unique_id as $row) {
+            ($row == $randID) ? ($i++) : ($i=0);
+	    }
+	}
+	$re_unique_id = $randID;
+
+	// Copy the whole tmp_rental into the rentals table and delete entries of tmp_rentals table.
 	if(!$error) {
 		// Daten werden rüber kopiert
-		$statement = $pdo->prepare("INSERT INTO rentals (re_handle, rp_id, cl_id) SELECT tmp_re_handle, tmp_rp_id, tmp_cl_id FROM tmp_rentals");
+		$statement = $pdo->prepare("INSERT INTO rentals (re_unique_id, re_handle, rp_id, cl_id) SELECT :re_unique_id, tmp_re_handle, tmp_rp_id, tmp_cl_id FROM tmp_rentals");
+		$result = $statement->execute(array('re_unique_id' => $re_unique_id));
+		if($result) {		
+			echo '<br>Wynajem został utworzony.</a><br>';
+			$registerForm = false;
+			$rentForm = true;
+			// Daten werden aus tmp Tabelle gelöscht.
+			$statement = $pdo->prepare("TRUNCATE TABLE tmp_rentals");
+			$result = $statement->execute();
+		} else {
+			echo '<br>Niestety wystąpił błąd. Pojazdy są już zawarte w bazie danych i nie można ich pożyczyć po raz drugi.';
+			$registerForm = false;
+			$rentForm = true;
+		}
+	}
+
+	// Insert Price into rental table
+	if(!$error) {
+		$statement = $pdo->prepare("UPDATE rentals (re_handle, rp_id, cl_id) SELECT tmp_re_handle, tmp_rp_id, tmp_cl_id FROM tmp_rentals");
 		$result = $statement->execute();
 		if($result) {		
 			echo '<br>Wynajem został utworzony.</a><br>';
@@ -182,6 +196,7 @@ if(isset($_GET['create_rental'])) {
 			$rentForm = true;
 		}
 	}
+
 	// End client Session and redirect to create client form.
 	unset($_SESSION['clientID']);
 	header ( 'Location: newclient.php' );
@@ -255,7 +270,7 @@ if($rentForm == true) {
 			?>
 		</legend>
 			<label for="vehicle">Numer pojazdu:</label>
-			<input type="search" name="vehicle" list="vehicle" id="hour" size="40" maxlength="250" class="form-control" required>
+			<input type="search" name="vehicle" list="vehicle" id="hour" size="40" maxlength="250" class="form-control">
 				<datalist id="vehicle">
 					<?php
 					//Get the values for the dropdown with rentalpoints
@@ -272,36 +287,46 @@ if($rentForm == true) {
 					?>
 				</datalist>
 			</input>
-			<label for="days">Dni:</label><input type="text" id="days" size="40" maxlength="250" name="days" class="form-control" required></input>
-			<label for="hours">Godzin:</label><input type="text" id="hours" size="40" maxlength="250" name="hours" class="form-control" required></input>
-			<label for="minutes">Minut:</label><input type="text" id="minutes" size="40" maxlength="250" name="minutes" class="form-control" required></input>
 		</fieldset>
 	</div>
-<div class="panel panel-default">
- <table class="table" id="tmp_rentals">
-	 <tr>
-		 <th>#</th>
-		 <th>ID pojazd</th>
-		 <th>Usuń pojazd</th>
-	 </tr>
-	 <?php 
-	 $statement = $pdo->prepare("SELECT * FROM tmp_rentals WHERE tmp_cl_id = :clientID ORDER BY tmp_re_handle");
-	 $result = $statement->execute(array( 'clientID' => $_SESSION['clientID'] ));
-	 $count = 1;
-	 while($row = $statement->fetch()) {
-		echo "<tr>";
-			echo "<td>".$count++."</td>";
-			echo "<td>".$row['tmp_re_handle']."</td>";
-			// echo '<td><span class="delete" id="del_' . $row['tmp_id'] . '">Usuń</span></td>';
-			echo '<td><button type="button" class="delete btn btn-primary" name="delete_row" value="delete_row" id="del_' . $row['tmp_id'] . '">Usuń</button></td>';
-		echo "</tr>";
-	 }
-	 ?>
- </table>
-</div>
+	<!-- Show Table with Vehicles in tmp_rentals -->
+	<div class="panel panel-default">
+ 		<table class="table" id="tmp_rentals">
+			<tr>
+				<th>#</th>
+				<th>ID pojazd</th>
+				<th>Usuń pojazd</th>
+			</tr>
+			<?php
+				$statement = $pdo->prepare("SELECT * FROM tmp_rentals WHERE tmp_cl_id = :clientID ORDER BY tmp_re_handle");
+				$result = $statement->execute(array( 'clientID' => $_SESSION['clientID'] ));
+				$count = 1;
+				while($row = $statement->fetch()) {
+					echo "<tr>";
+					echo "<td>".$count++."</td>";
+					echo "<td>".$row['tmp_re_handle']."</td>";
+					echo '<td><button type="button" class="delete btn btn-primary" name="delete_row" value="delete_row" id="del_' . $row['tmp_id'] . '">Usuń</button></td>';
+					echo "</tr>";
+				}
+			?>
+		</table>
+	</div>
 	<button formaction="?rental=1" type="submit" class="btn btn-lg btn-primary btn-block">Dodaj pojazd</button>
-	<button formaction="?create_rental=1" type="submit" class="create_rental btn btn-lg btn-primary btn-block">Stworzyć wynajem</button>
+	
+	<fieldset>
+		<label for="day">Ganzer Tag</label><input type="radio" name="yesno" id="day" value="day" size="40" maxlength="250" class="form-control"/>
+		<label for="halfHour">Halbe Stunde</label><input type="radio" name="yesno" id="halfHour" value="halfHour" size="40" maxlength="250" class="form-control"/>
+		<label for="hours_select">Stunden</label><input type="radio" onclick="javascript:yesnoCheck();" name="yesno" id="yesCheck" value="hours_select" size="40" maxlength="250" class="form-control"/>
+		<label for="days_select">Tage</label><input type="radio" onclick="javascript:yesnoCheck();" name="yesno" id="noCheck" value="days_select" size="40" maxlength="250" class="form-control"/>
+		<div id="ifYes" style="display:none">
+			<label for="hours">Stunden</label><input type="text" name="hours" id="hours" size="40" maxlength="250" class="form-control"/>
+		</div>
+		<div id="ifNo" style="display:none">
+			<label for="days">Tage</label><input type="text" name="days" id="days" size="40" maxlength="250" class="form-control"/>
+		</div>
+	</fieldset>
 
+	<button formaction="?create_rental=1" type="submit" class="create_rental btn btn-lg btn-primary btn-block">Stworzyć wynajem</button>
 </form>
 
 <?php
@@ -312,8 +337,9 @@ if($rentForm == true) {
 <?php
 include("templates/footer.inc.php")
 ?>
-    <!-- SCRIPT -->
-    <script type='text/javascript'>
+	<script type='text/javascript'>
+
+	// SCRIPT for delete rows
         $(document).ready(function(){
 
             // Delete 
@@ -347,5 +373,17 @@ include("templates/footer.inc.php")
 
             });
 
-        });
+		});
+
+	// SCRIPT for select time options
+	function yesnoCheck() {
+        if (document.getElementById('yesCheck').checked) {
+            document.getElementById('ifYes').style.display = 'block';
+            document.getElementById('ifNo').style.display = 'none';
+        } 
+        else if(document.getElementById('noCheck').checked) {
+            document.getElementById('ifNo').style.display = 'block';
+            document.getElementById('ifYes').style.display = 'none';
+      }
+    }
     </script>
