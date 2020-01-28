@@ -3,7 +3,7 @@ session_start();
 require_once("inc/config.inc.php");
 require_once("inc/functions.inc.php");
 if(!isset($_GET['userid']) || !isset($_GET['code'])) {
-	error("Leider wurde beim Aufruf dieser Website kein Code zum Zurücksetzen deines Passworts übermittelt");
+	error("Niestety podczas odwiedzania tej strony nie został wysłany kod umożliwiający zresetowanie hasła");
 }
 
 
@@ -19,17 +19,17 @@ $user = $statement->fetch();
  
 //Überprüfe dass ein Nutzer gefunden wurde und dieser auch ein Passwortcode hat
 if($user === null || $user['passwortcode'] === null) {
-	error("Der Benutzer wurde nicht gefunden oder hat kein neues Passwort angefordert.");
+	error("Użytkownik nie został znaleziony lub nie poprosił o nowe hasło.");
 }
  
 if($user['passwortcode_time'] === null || strtotime($user['passwortcode_time']) < (time()-24*3600) ) {
-	error("Dein Code ist leider abgelaufen. Bitte benutze die Passwort vergessen Funktion erneut.");
+	error("Niestety Twój kod wygasł. Użyj ponownie funkcji zapomnianego hasła.");
 }
  
  
 //Überprüfe den Passwortcode
 if(sha1($code) != $user['passwortcode']) {
-	error("Der übergebene Code war ungültig. Stell sicher, dass du den genauen Link in der URL aufgerufen hast. Solltest du mehrmals die Passwort-vergessen Funktion genutzt haben, so ruf den Link in der neuesten E-Mail auf.");
+	error("Podany kod był nieprawidłowy. Upewnij się, że masz dokładny link w adresie URL. Jeśli kilkakrotnie używałeś funkcji zapomnienia hasła, wywołaj link w najnowszym e-mailu.");
 }
  
 //Der Code war korrekt, der Nutzer darf ein neues Passwort eingeben
@@ -39,14 +39,14 @@ if(isset($_GET['send'])) {
 	$passwort2 = $_POST['passwort2'];
 	
 	if($passwort != $passwort2) {
-		$msg =  "Bitte identische Passwörter eingeben";
+		$msg =  "Wprowadź identyczne hasła";
 	} else { //Speichere neues Passwort und lösche den Code
 		$passworthash = password_hash($passwort, PASSWORD_DEFAULT);
 		$statement = $pdo->prepare("UPDATE users SET passwort = :passworthash, passwortcode = NULL, passwortcode_time = NULL WHERE id = :userid");
 		$result = $statement->execute(array('passworthash' => $passworthash, 'userid'=> $userid ));
 		
 		if($result) {
-			$msg = "Dein Passwort wurde erfolgreich geändert";
+			$msg = "Twoje hasło zostało pomyślnie zmienione";
 			$showForm = false;
 		}
 	}
