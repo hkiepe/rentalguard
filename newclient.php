@@ -354,19 +354,19 @@ include("templates/footer.inc.php")
                 url: 'remove.php',
                 type: 'POST',
                 data: { tmp_id:deleteid },
-                success: function(response){
-                if(response){
-                // Remove row from HTML Table
-				$(el).closest("tr").css('background','tomato');
-				console.log((el).closest("tr"));
-                $(el).closest("tr").fadeOut(800,function(){
-                $(this).remove();
-                });
-                }else{
-                alert('Invalid ID.');
-                }
+                success: function(response) {
+					if(response) {
+						// Remove row from HTML Table
+						$(el).closest("tr").css('background','tomato');
+						console.log((el).closest("tr"));
+						$(el).closest("tr").fadeOut(800,function() {
+							$(this).remove();
+						});
+					}else {
+						alert('Invalid ID.');
+					}
 
-            }
+            	}
             });
 
             });
